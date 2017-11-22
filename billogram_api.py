@@ -21,25 +21,25 @@
 
 "Library for accessing the Billogram v2 HTTP API"
 
-from __future__ import unicode_literals, print_function, division
-import requests
 import json
 
+import requests
 
 API_URL_BASE = "https://billogram.com/api/v2"
 USER_AGENT = "Billogram API Python Library/1.00"
 
-
 # python 2/3 intercompatibility
 try:
-    unicode  # not defined in py3k
+    str  # not defined in py3k
+
 
     def _printable_repr(s):
         # python 2.7 can't handle unicode objects from __repr__
         # so need this wrapper
         return s.encode('utf-8')
 except NameError:
-    basestring = str  # py3k has no basestring type so fake one
+    str = str  # py3k has no basestring type so fake one
+
 
     def _printable_repr(s):
         return s
@@ -47,6 +47,7 @@ except NameError:
 
 class BillogramAPIError(Exception):
     "Base class for errors from the Billogram API"
+
     def __init__(self, message, **kwargs):
         super(BillogramAPIError, self).__init__(message)
 
@@ -138,6 +139,7 @@ class BillogramAPI(object):
     Objects of this class provide a call interface to the Billogram
     v2 HTTP API.
     """
+
     def __init__(self, auth_user, auth_key, user_agent=None, api_base=None):
         """Create a Billogram API connection object
 
@@ -205,7 +207,7 @@ class BillogramAPI(object):
         if resp.status_code in range(500, 600):
             # internal error
             if resp.headers['content-type'] == expect_content_type and \
-                    expect_content_type == 'application/json':
+                            expect_content_type == 'application/json':
                 data = resp.json()
                 raise ServiceMalfunctioningError(
                     'Billogram API reported a server error: {} - {}'.format(
@@ -360,6 +362,7 @@ class SingletonObject(object):
 
     See the online documentation for the actual structure of remote objects.
     """
+
     def __init__(self, api, url_name):
         self._api = api
         self._object_class = url_name
@@ -418,6 +421,7 @@ class SimpleObject(SingletonObject):
 
     See the online documentation for the actual structure of remote objects.
     """
+
     def __init__(self, api, object_class, data):
         self._api = api
         self._object_class = object_class
@@ -429,8 +433,8 @@ class SimpleObject(SingletonObject):
     def _url(self):
         return self._object_class._url_of(self)
 
-    def __getattr__(self, key):
-        return self._data[key]
+    # def __getattr__(self, key):
+    #     return self._data[key]
 
     def delete(self):
         "Remove the remote object from the database"
@@ -450,6 +454,7 @@ class Query(object):
     The exact fields and special queries available for each object type varies,
     see the online documentation for details.
     """
+
     def __init__(self, type_class):
         self._type_class = type_class
         self._filter = {}
@@ -512,14 +517,14 @@ class Query(object):
             return
         if value:
             assert 'filter_type' in value and \
-                'filter_field' in value and \
-                'filter_value' in value
+                   'filter_field' in value and \
+                   'filter_value' in value
             assert value['filter_type'] in (
                 'field',
                 'field-prefix',
                 'field-search',
                 'special'
-                )
+            )
             self._filter = dict(value)
         else:
             self._filter = {}
@@ -595,7 +600,7 @@ class Query(object):
         import copy
         qry = copy.copy(self)
         # iterate over every object on every page
-        for page_number in range(1, qry.total_pages+1):
+        for page_number in range(1, qry.total_pages + 1):
             page = qry.get_page(page_number)
             for obj in page:
                 yield obj
@@ -819,13 +824,13 @@ class BillogramQuery(Query):
     def filter_state_any(self, *states):
         "Find billogram objects with any state of the listed ones"
         if len(states) == 1 and (
-            isinstance(states[0], list) or
-            isinstance(states[0], tuple) or
-            isinstance(states[0], set) or
-            isinstance(states[0], frozenset)
+                            isinstance(states[0], list) or
+                            isinstance(states[0], tuple) or
+                        isinstance(states[0], set) or
+                    isinstance(states[0], frozenset)
         ):
             states = states[0]
-        assert all(isinstance(s, basestring) for s in states)
+        assert all(isinstance(s, str) for s in states)
         return self.filter_field('state', ','.join(states))
 
 
@@ -882,7 +887,7 @@ BillogramExceptions = type(
     {
         nm: cl for
         nm, cl in
-        globals().items() if
+        list(globals().items()) if
         isinstance(cl, type) and issubclass(cl, BillogramAPIError)
     }
 )
@@ -890,4 +895,3 @@ BillogramExceptions = type(
 # just the BillogramAPI class and the exceptions are really part
 # of the call API of this module
 __all__ = ['BillogramAPI', 'BillogramExceptions']
-
